@@ -5,10 +5,7 @@ import json
 import requests
 import subprocess
 
-# Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(__file__))
-
-app = Flask(__name__, template_folder="src/templates")
+app = Flask(__name__, template_folder="../src/templates")
 
 class SimpleGit:
     def __init__(self, username="aruncs31s"):
@@ -62,14 +59,20 @@ class SimpleGit:
 
 def load_data():
     try:
-        with open('data.json', 'r') as f:
-            return json.load(f)
+        # Try different possible locations for data.json
+        for path in ['../data.json', 'data.json', './data.json']:
+            try:
+                with open(path, 'r') as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                continue
     except:
-        return {
-            "username": "aruncs31s",
-            "about": "Just a developer with laptop",
-            "experience": []
-        }
+        pass
+    return {
+        "username": "aruncs31s",
+        "about": "Just a developer with laptop",
+        "experience": []
+    }
 
 @app.route('/')
 def go_home():
@@ -78,14 +81,21 @@ def go_home():
     
     # Try to load repos from file, fallback to API
     try:
-        with open('repos.json', 'r') as f:
-            github_projects = json.load(f)
+        for path in ['../repos.json', 'repos.json', './repos.json']:
+            try:
+                with open(path, 'r') as f:
+                    github_projects = json.load(f)
+                    break
+            except FileNotFoundError:
+                continue
+        else:
+            github_projects = git.get_github_repositories()
     except:
         github_projects = git.get_github_repositories()
     
     portfolio = {
         "name": git.name,
-        "title": "Python Developer",
+        "title": "Python Developer", 
         "bio": git.get_github_description(),
         "about": data.get("about", "Python Developer"),
         "avatar": git.get_image_url_github(),
@@ -105,8 +115,5 @@ def is_complete():
     return {"result": True}
 
 # For Vercel
-def handler(request, response):
-    return app(request, response)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+def handler(environ, start_response):
+    return app(environ, start_response)
