@@ -59,7 +59,6 @@ class SimpleGit:
 
 def load_data():
     try:
-        # Try different possible locations for data.json
         for path in ['../data.json', 'data.json', './data.json']:
             try:
                 with open(path, 'r') as f:
@@ -78,8 +77,6 @@ def load_data():
 def go_home():
     data = load_data()
     git = SimpleGit(data.get("username", "aruncs31s"))
-    
-    # Try to load repos from file, fallback to API
     try:
         for path in ['../repos.json', 'repos.json', './repos.json']:
             try:
